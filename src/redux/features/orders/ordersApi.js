@@ -35,17 +35,13 @@
 
 
 
-
-
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-const baseUrl = "https://book-app-backend-blush.vercel.app";
+import getBaseUrl from "../../../utils/baseURL";
 
 const ordersApi = createApi({
     reducerPath: 'ordersApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: `${baseUrl}/api/orders`,
+        baseUrl: `${getBaseUrl()}/api/orders`,
         credentials: 'include'
     }),
     tagTypes: ['Orders'],
@@ -66,6 +62,9 @@ const ordersApi = createApi({
     })
 })
 
-export const { useCreateOrderMutation, useGetOrderByEmailQuery } = ordersApi;
+export const {
+    useCreateOrderMutation,
+    useGetOrderByEmailQuery
+} = ordersApi;
 
 export default ordersApi;

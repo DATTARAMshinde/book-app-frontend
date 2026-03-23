@@ -5,8 +5,8 @@
 // export default getBaseUrl;
 
 
-// const getBaseUrl = () => {
-//   return "https://book-app-backend-blush.vercel.app";
-// };
+const getBaseUrl = () => {
+  return "https://book-app-backend-blush.vercel.app";
+};
 
-// export default getBaseUrl;
+export default getBaseUrl;
