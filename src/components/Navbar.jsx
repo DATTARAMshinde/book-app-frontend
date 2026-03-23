@@ -15,6 +15,7 @@ const navigation = [
     {name: "Check Out", href:"/checkout"},
 ]
 
+
 const Navbar = () => {
 
     const  [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -33,9 +34,12 @@ const Navbar = () => {
             <nav className="flex justify-between items-center">
                 {/* left side */}
                 <div className="flex items-center md:gap-16 gap-4">
-                    <Link to="/">
+                    { <Link to="/">
                         <HiMiniBars3CenterLeft className="size-6" />
-                    </Link>
+                    </Link>  }
+
+                   
+                   
 
                     {/* search input */}
                     <div className="relative sm:w-72 w-40 space-x-2">
@@ -46,6 +50,7 @@ const Navbar = () => {
                             className="bg-[#EAEAEA] w-full py-1 md:px-8 px-6 rounded-md focus:outline-none"
                         />
                     </div>
+
                 </div>
 
 
