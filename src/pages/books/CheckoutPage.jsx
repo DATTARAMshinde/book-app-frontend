@@ -195,6 +195,249 @@
 // }
 
 // export default CheckoutPage
+// import React, { useState } from 'react'
+// import { useSelector } from 'react-redux';
+// import { useForm } from "react-hook-form"
+// import { useNavigate } from 'react-router-dom';
+// import { useAuth } from '../../context/AuthContext';
+// import Swal from 'sweetalert2';
+// import { useCreateOrderMutation } from '../../redux/features/orders/ordersApi';
+
+// const CheckoutPage = () => {
+
+//     const cartItems = useSelector(state => state.cart.cartItems);
+
+//     const totalPrice = Number(
+//         cartItems.reduce((acc, item) => acc + item.newPrice, 0).toFixed(2)
+//     );
+
+//     const { currentUser } = useAuth();
+//     const navigate = useNavigate();
+
+//     const { register, handleSubmit } = useForm();
+
+//     const [createOrder] = useCreateOrderMutation();
+
+//     const [isChecked, setIsChecked] = useState(false);
+//     const [showPayment, setShowPayment] = useState(false);
+//     const [formData, setFormData] = useState(null);
+//     const [paymentMethod, setPaymentMethod] = useState("upi");
+
+//     // Payment input states for validation
+//     const [upiId, setUpiId] = useState("");
+//     const [cardDetails, setCardDetails] = useState({ number: "", expiry: "", cvv: "" });
+
+//     // STEP 1: form submit → open payment UI
+//     const onSubmit = (data) => {
+//         setFormData(data);
+//         setShowPayment(true);
+//     };
+
+//     // STEP 2: confirm payment → save order
+//     const handleConfirmPayment = async () => {
+
+//         // 🔹 Payment Validation
+//         if(paymentMethod === "upi" && !upiId.trim()) {
+//             Swal.fire("Error", "Please enter your UPI ID", "error");
+//             return;
+//         }
+
+//         if(paymentMethod === "card") {
+//             const { number, expiry, cvv } = cardDetails;
+//             if(!number.trim() || !expiry.trim() || !cvv.trim()) {
+//                 Swal.fire("Error", "Please fill all card details", "error");
+//                 return;
+//             }
+//         }
+
+//         // COD me validation nahi chahiye
+
+//         // fake loading
+//         Swal.fire({
+//             title: "Processing Payment...",
+//             timer: 2000,
+//             didOpen: () => {
+//                 Swal.showLoading();
+//             }
+//         });
+
+//         const newOrder = {
+//             name: formData.name,
+//             email: currentUser?.email,
+//             address: {
+//                 street: formData.address,
+//                 city: formData.city,
+//                 state: formData.state,
+//                 country: formData.country,
+//                 zipcode: formData.zipcode
+//             },
+//             phone: formData.phone,
+//             productIds: cartItems.map(item => item?._id),
+//             totalPrice: totalPrice,
+//             paymentMethod: paymentMethod,
+//             paymentDetails: paymentMethod === "upi" ? { upiId } :
+//                              paymentMethod === "card" ? { ...cardDetails } :
+//                              {} // cod
+//         };
+
+//         try {
+//             await createOrder(newOrder).unwrap();
+
+//             Swal.fire("Success 🎉", "Order placed successfully!", "success");
+
+//             // Reset payment popup & navigate
+//             setShowPayment(false);
+//             navigate("/orders");
+
+//         } catch (error) {
+//             console.error(error);
+//             Swal.fire("Error", "Order failed", "error");
+//         }
+//     };
+
+//     return (
+//         <section>
+//             <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
+//                 <div className="container max-w-screen-lg mx-auto">
+
+//                     <h2 className="text-xl font-bold mb-2">Checkout</h2>
+
+//                     <p>Total Price: ₹{totalPrice}</p>
+//                     <p>Items: {cartItems.length}</p>
+
+//                     <div className="bg-white p-6 rounded shadow mt-4">
+
+//                         <form onSubmit={handleSubmit(onSubmit)}>
+
+//                             <input {...register("name")} placeholder="Full Name" className="border p-2 w-full mb-2" />
+
+//                             <input value={currentUser?.email} disabled className="border p-2 w-full mb-2" />
+
+//                             <input {...register("phone")} placeholder="Phone" className="border p-2 w-full mb-2" />
+
+//                             <input {...register("address")} placeholder="Address" className="border p-2 w-full mb-2" />
+
+//                             <input {...register("city")} placeholder="City" className="border p-2 w-full mb-2" />
+
+//                             <input {...register("state")} placeholder="State" className="border p-2 w-full mb-2" />
+
+//                             <input {...register("country")} placeholder="Country" className="border p-2 w-full mb-2" />
+
+//                             <input {...register("zipcode")} placeholder="Zipcode" className="border p-2 w-full mb-3" />
+
+//                             <div className="flex items-center gap-2 mb-3">
+//                                 <input
+//                                     type="checkbox"
+//                                     onChange={(e) => setIsChecked(e.target.checked)}
+//                                 />
+//                                 <p>I agree to Terms</p>
+//                             </div>
+
+//                             <button
+//                                 disabled={!isChecked}
+//                                 className="bg-blue-500 text-white px-4 py-2 rounded w-full"
+//                             >
+//                                 Place Order
+//                             </button>
+
+//                         </form>
+//                     </div>
+//                 </div>
+//             </div>
+
+//             {/* 🔥 PAYMENT POPUP */}
+//             {showPayment && (
+//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+//                     <div className="bg-white p-6 rounded w-96">
+
+//                         <h2 className="text-xl font-bold mb-4">Payment</h2>
+
+//                         {/* Payment Methods */}
+//                         <div className="space-y-2 mb-4">
+
+//                             <label className="flex items-center gap-2">
+//                                 <input type="radio" value="upi"
+//                                     checked={paymentMethod === "upi"}
+//                                     onChange={(e) => setPaymentMethod(e.target.value)} />
+//                                 UPI
+//                             </label>
+
+//                             <label className="flex items-center gap-2">
+//                                 <input type="radio" value="card"
+//                                     checked={paymentMethod === "card"}
+//                                     onChange={(e) => setPaymentMethod(e.target.value)} />
+//                                 Card
+//                             </label>
+
+//                             <label className="flex items-center gap-2">
+//                                 <input type="radio" value="cod"
+//                                     checked={paymentMethod === "cod"}
+//                                     onChange={(e) => setPaymentMethod(e.target.value)} />
+//                                 Cash on Delivery
+//                             </label>
+
+//                         </div>
+
+//                         {/* Dynamic UI with validation binding */}
+//                         {paymentMethod === "upi" && (
+//                             <input
+//                                 placeholder="example@upi"
+//                                 value={upiId}
+//                                 onChange={(e) => setUpiId(e.target.value)}
+//                                 className="border p-2 w-full mb-3"
+//                             />
+//                         )}
+
+//                         {paymentMethod === "card" && (
+//                             <>
+//                                 <input placeholder="Card Number"
+//                                        value={cardDetails.number}
+//                                        onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})}
+//                                        className="border p-2 w-full mb-2" />
+//                                 <input placeholder="MM/YY"
+//                                        value={cardDetails.expiry}
+//                                        onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})}
+//                                        className="border p-2 w-full mb-2" />
+//                                 <input placeholder="CVV"
+//                                        value={cardDetails.cvv}
+//                                        onChange={(e) => setCardDetails({...cardDetails, cvv: e.target.value})}
+//                                        className="border p-2 w-full mb-3" />
+//                             </>
+//                         )}
+
+//                         {paymentMethod === "cod" && (
+//                             <p className="text-sm text-gray-500 mb-3">
+//                                 Pay when product is delivered.
+//                             </p>
+//                         )}
+
+//                         {/* Buttons */}
+//                         <button
+//                             onClick={handleConfirmPayment}
+//                             className="w-full bg-green-500 text-white py-2 rounded mb-2"
+//                         >
+//                             Confirm Payment
+//                         </button>
+
+//                         <button
+//                             onClick={() => setShowPayment(false)}
+//                             className="w-full bg-gray-400 text-white py-2 rounded"
+//                         >
+//                             Cancel
+//                         </button>
+
+//                     </div>
+//                 </div>
+//             )}
+//         </section>
+//     )
+// }
+
+// export default CheckoutPage;
+
+
+
+
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux';
 import { useForm } from "react-hook-form"
@@ -213,9 +456,7 @@ const CheckoutPage = () => {
 
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-
     const { register, handleSubmit } = useForm();
-
     const [createOrder] = useCreateOrderMutation();
 
     const [isChecked, setIsChecked] = useState(false);
@@ -223,20 +464,16 @@ const CheckoutPage = () => {
     const [formData, setFormData] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState("upi");
 
-    // Payment input states for validation
     const [upiId, setUpiId] = useState("");
     const [cardDetails, setCardDetails] = useState({ number: "", expiry: "", cvv: "" });
 
-    // STEP 1: form submit → open payment UI
     const onSubmit = (data) => {
         setFormData(data);
         setShowPayment(true);
     };
 
-    // STEP 2: confirm payment → save order
     const handleConfirmPayment = async () => {
 
-        // 🔹 Payment Validation
         if(paymentMethod === "upi" && !upiId.trim()) {
             Swal.fire("Error", "Please enter your UPI ID", "error");
             return;
@@ -250,15 +487,10 @@ const CheckoutPage = () => {
             }
         }
 
-        // COD me validation nahi chahiye
-
-        // fake loading
         Swal.fire({
             title: "Processing Payment...",
             timer: 2000,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => Swal.showLoading()
         });
 
         const newOrder = {
@@ -274,102 +506,139 @@ const CheckoutPage = () => {
             phone: formData.phone,
             productIds: cartItems.map(item => item?._id),
             totalPrice: totalPrice,
-            paymentMethod: paymentMethod,
+            paymentMethod,
             paymentDetails: paymentMethod === "upi" ? { upiId } :
-                             paymentMethod === "card" ? { ...cardDetails } :
-                             {} // cod
+                            paymentMethod === "card" ? { ...cardDetails } : {}
         };
 
         try {
             await createOrder(newOrder).unwrap();
-
             Swal.fire("Success 🎉", "Order placed successfully!", "success");
-
-            // Reset payment popup & navigate
             setShowPayment(false);
             navigate("/orders");
-
         } catch (error) {
-            console.error(error);
             Swal.fire("Error", "Order failed", "error");
         }
     };
 
     return (
-        <section>
-            <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
-                <div className="container max-w-screen-lg mx-auto">
+        <section className="min-h-screen bg-gray-950 text-gray-200 flex items-center justify-center p-6">
 
-                    <h2 className="text-xl font-bold mb-2">Checkout</h2>
+            <div className="w-full max-w-3xl bg-gray-900 border border-gray-800 rounded-xl shadow-xl p-8">
 
-                    <p>Total Price: ₹{totalPrice}</p>
+                {/* TITLE */}
+                <h2 className="text-2xl font-semibold mb-4">Checkout</h2>
+
+                {/* SUMMARY */}
+                <div className="flex justify-between mb-6 text-sm text-gray-400">
                     <p>Items: {cartItems.length}</p>
-
-                    <div className="bg-white p-6 rounded shadow mt-4">
-
-                        <form onSubmit={handleSubmit(onSubmit)}>
-
-                            <input {...register("name")} placeholder="Full Name" className="border p-2 w-full mb-2" />
-
-                            <input value={currentUser?.email} disabled className="border p-2 w-full mb-2" />
-
-                            <input {...register("phone")} placeholder="Phone" className="border p-2 w-full mb-2" />
-
-                            <input {...register("address")} placeholder="Address" className="border p-2 w-full mb-2" />
-
-                            <input {...register("city")} placeholder="City" className="border p-2 w-full mb-2" />
-
-                            <input {...register("state")} placeholder="State" className="border p-2 w-full mb-2" />
-
-                            <input {...register("country")} placeholder="Country" className="border p-2 w-full mb-2" />
-
-                            <input {...register("zipcode")} placeholder="Zipcode" className="border p-2 w-full mb-3" />
-
-                            <div className="flex items-center gap-2 mb-3">
-                                <input
-                                    type="checkbox"
-                                    onChange={(e) => setIsChecked(e.target.checked)}
-                                />
-                                <p>I agree to Terms</p>
-                            </div>
-
-                            <button
-                                disabled={!isChecked}
-                                className="bg-blue-500 text-white px-4 py-2 rounded w-full"
-                            >
-                                Place Order
-                            </button>
-
-                        </form>
-                    </div>
+                    <p>Total: <span className="text-blue-400 font-semibold">₹{totalPrice}</span></p>
                 </div>
+
+                {/* FORM */}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+
+                  <input
+  {...register("name")}
+  required
+  placeholder="Full Name"
+  className="w-full p-2 bg-gray-800 border border-gray-700 rounded
+             focus:ring-2 focus:ring-blue-500 outline-none transition-all duration-300"
+/>
+                    <input value={currentUser?.email} disabled
+                        className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-gray-400" />
+
+                   <input
+  {...register("phone", { required: true })}
+  type="tel"
+  placeholder="Phone"
+  required
+  className="w-full p-2 bg-gray-800 border border-gray-700 rounded
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
+             transition-all duration-300"
+/>
+                    <input
+  {...register("address", { required: true })}
+  type="text"
+  placeholder="Address"
+  required
+  className="w-full p-2 bg-gray-800 border border-gray-700 rounded
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
+             transition-all duration-300"
+/>
+                    <div className="grid grid-cols-2 gap-3">
+                        <input
+  {...register("city", { required: true })}
+  type="text"
+  placeholder="City"
+  required
+  className="w-full p-2 bg-gray-800 border border-gray-700 rounded
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
+             transition-all duration-300"
+/>
+                        <input {...register("state")} placeholder="State"
+                            className="p-2 bg-gray-800 border border-gray-700 rounded" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <input {...register("country")} placeholder="Country"
+                            className="p-2 bg-gray-800 border border-gray-700 rounded" />
+
+                        <input
+  {...register("zipcode", { required: true })}
+  type="text"
+  placeholder="Zipcode"
+  required
+  className="w-full p-2 bg-gray-800 border border-gray-700 rounded
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none
+             transition-all duration-300"
+/>
+                    </div>
+
+                    {/* TERMS */}
+                    <div className="flex items-center gap-2 mt-3">
+                        <input type="checkbox"
+                            onChange={(e) => setIsChecked(e.target.checked)} />
+                        <p className="text-sm text-gray-400">I agree to Terms</p>
+                    </div>
+
+                    {/* BUTTON */}
+                    <button
+                        disabled={!isChecked}
+                        className="w-full mt-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 text-white py-2 rounded shadow-md hover:shadow-lg transition"
+                    >
+                        Place Order
+                    </button>
+
+                </form>
             </div>
 
-            {/* 🔥 PAYMENT POPUP */}
+            {/* 🔥 PAYMENT MODAL */}
             {showPayment && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded w-96">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
-                        <h2 className="text-xl font-bold mb-4">Payment</h2>
+                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-96 shadow-2xl">
 
-                        {/* Payment Methods */}
-                        <div className="space-y-2 mb-4">
+                        <h2 className="text-xl font-semibold mb-4">Payment</h2>
 
-                            <label className="flex items-center gap-2">
+                        {/* METHODS */}
+                        <div className="space-y-2 mb-4 text-sm">
+
+                            <label className="flex gap-2">
                                 <input type="radio" value="upi"
                                     checked={paymentMethod === "upi"}
                                     onChange={(e) => setPaymentMethod(e.target.value)} />
                                 UPI
                             </label>
 
-                            <label className="flex items-center gap-2">
+                            <label className="flex gap-2">
                                 <input type="radio" value="card"
                                     checked={paymentMethod === "card"}
                                     onChange={(e) => setPaymentMethod(e.target.value)} />
                                 Card
                             </label>
 
-                            <label className="flex items-center gap-2">
+                            <label className="flex gap-2">
                                 <input type="radio" value="cod"
                                     checked={paymentMethod === "cod"}
                                     onChange={(e) => setPaymentMethod(e.target.value)} />
@@ -378,55 +647,58 @@ const CheckoutPage = () => {
 
                         </div>
 
-                        {/* Dynamic UI with validation binding */}
+                        {/* INPUTS */}
                         {paymentMethod === "upi" && (
                             <input
                                 placeholder="example@upi"
                                 value={upiId}
                                 onChange={(e) => setUpiId(e.target.value)}
-                                className="border p-2 w-full mb-3"
+                                className="w-full p-2 bg-gray-800 border border-gray-700 rounded mb-3"
                             />
                         )}
 
                         {paymentMethod === "card" && (
                             <>
                                 <input placeholder="Card Number"
-                                       value={cardDetails.number}
-                                       onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})}
-                                       className="border p-2 w-full mb-2" />
+                                    value={cardDetails.number}
+                                    onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})}
+                                    className="w-full p-2 bg-gray-800 border border-gray-700 rounded mb-2" />
+
                                 <input placeholder="MM/YY"
-                                       value={cardDetails.expiry}
-                                       onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})}
-                                       className="border p-2 w-full mb-2" />
+                                    value={cardDetails.expiry}
+                                    onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})}
+                                    className="w-full p-2 bg-gray-800 border border-gray-700 rounded mb-2" />
+
                                 <input placeholder="CVV"
-                                       value={cardDetails.cvv}
-                                       onChange={(e) => setCardDetails({...cardDetails, cvv: e.target.value})}
-                                       className="border p-2 w-full mb-3" />
+                                    value={cardDetails.cvv}
+                                    onChange={(e) => setCardDetails({...cardDetails, cvv: e.target.value})}
+                                    className="w-full p-2 bg-gray-800 border border-gray-700 rounded mb-3" />
                             </>
                         )}
 
                         {paymentMethod === "cod" && (
-                            <p className="text-sm text-gray-500 mb-3">
+                            <p className="text-sm text-gray-400 mb-3">
                                 Pay when product is delivered.
                             </p>
                         )}
 
-                        {/* Buttons */}
+                        {/* BUTTONS */}
                         <button
                             onClick={handleConfirmPayment}
-                            className="w-full bg-green-500 text-white py-2 rounded mb-2"
+                            className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded mb-2 transition"
                         >
                             Confirm Payment
                         </button>
 
                         <button
                             onClick={() => setShowPayment(false)}
-                            className="w-full bg-gray-400 text-white py-2 rounded"
+                            className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded transition"
                         >
                             Cancel
                         </button>
 
                     </div>
+
                 </div>
             )}
         </section>
